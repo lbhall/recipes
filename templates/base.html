@@ -1,0 +1,57 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Recipes{% endblock %}</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 880px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+        a { color: #2255aa; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        nav { display: flex; gap: 1rem; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: .75rem; margin-bottom: 1.5rem; }
+        nav .spacer { flex: 1; }
+        .messages { list-style: none; padding: 0; }
+        .messages li { padding: .5rem .75rem; border-radius: 4px; margin-bottom: .5rem; background: #eef; }
+        .messages li.error { background: #fee; }
+        .recipe-card { border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; display: flex; gap: 1rem; }
+        .recipe-card img { width: 120px; height: 90px; object-fit: cover; border-radius: 4px; }
+        .photo-gallery { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0; }
+        .photo-gallery figure { margin: 0; }
+        .photo-gallery img { max-width: 240px; max-height: 180px; border-radius: 4px; }
+        .photo-gallery figcaption { font-size: .85rem; color: #666; text-align: center; }
+        form table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+        form table th, form table td { padding: .25rem .5rem; vertical-align: top; }
+        fieldset { margin-bottom: 1rem; }
+        button, .button { display: inline-block; background: #2255aa; color: white; padding: .5rem 1rem; border: 0; border-radius: 4px; cursor: pointer; }
+        .button.danger { background: #aa2222; }
+        .meta { color: #666; font-size: .9rem; }
+    </style>
+</head>
+<body>
+<nav>
+    <a href="{% url 'cookbook:recipe_list' %}"><strong>Recipes</strong></a>
+    <span class="spacer"></span>
+    {% if user.is_authenticated %}
+        <a href="{% url 'cookbook:recipe_create' %}">New recipe</a>
+        <span class="meta">Hi, {{ user.username }}</span>
+        <form method="post" action="{% url 'logout' %}" style="margin:0">
+            {% csrf_token %}
+            <button type="submit" style="background:none;border:0;color:#2255aa;padding:0;cursor:pointer">Logout</button>
+        </form>
+    {% else %}
+        <a href="{% url 'login' %}">Login</a>
+        <a href="{% url 'register' %}">Register</a>
+    {% endif %}
+</nav>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% block content %}{% endblock %}
+</body>
+</html>

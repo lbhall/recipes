@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Edit{% else %}New{% endif %} recipe{% endblock %}
+{% block content %}
+<h1>{% if object %}Edit{% else %}New{% endif %} recipe</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <fieldset>
+        <legend>Details</legend>
+        {{ form.as_p }}
+    </fieldset>
+
+    <fieldset class="formset" data-prefix="ingredients">
+        <legend>Ingredients</legend>
+        {{ ingredient_formset.management_form }}
+        <div class="formset-forms">
+            {% for fs_form in ingredient_formset %}
+                <div class="formset-row">
+                    {{ fs_form.as_p }}
+                    {% if fs_form.instance.pk %}<label>Remove {{ fs_form.DELETE }}</label>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <template class="formset-empty">
+            <div class="formset-row">{{ ingredient_formset.empty_form.as_p }}</div>
+        </template>
+        <button type="button" class="add-form">Add another ingredient</button>
+    </fieldset>
+
+    <fieldset class="formset" data-prefix="steps">
+        <legend>Steps</legend>
+        {{ step_formset.management_form }}
+        <div class="formset-forms">
+            {% for fs_form in step_formset %}
+                <div class="formset-row">
+                    {{ fs_form.as_p }}
+                    {% if fs_form.instance.pk %}<label>Remove {{ fs_form.DELETE }}</label>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <template class="formset-empty">
+            <div class="formset-row">{{ step_formset.empty_form.as_p }}</div>
+        </template>
+        <button type="button" class="add-form">Add another step</button>
+    </fieldset>
+
+    <fieldset class="formset" data-prefix="photos">
+        <legend>Photos</legend>
+        {{ photo_formset.management_form }}
+        <div class="formset-forms">
+            {% for fs_form in photo_formset %}
+                <div class="formset-row">
+                    {{ fs_form.as_p }}
+                    {% if fs_form.instance.pk %}<label>Remove {{ fs_form.DELETE }}</label>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <template class="formset-empty">
+            <div class="formset-row">{{ photo_formset.empty_form.as_p }}</div>
+        </template>
+        <button type="button" class="add-form">Add another photo</button>
+    </fieldset>
+
+    <button type="submit">Save recipe</button>
+    <a href="{% url 'cookbook:recipe_list' %}">Cancel</a>
+</form>
+
+<script>
+document.querySelectorAll('fieldset.formset').forEach(function (formset) {
+    var prefix = formset.dataset.prefix;
+    var totalInput = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+    var container = formset.querySelector('.formset-forms');
+    var tmpl = formset.querySelector('template.formset-empty');
+    var btn = formset.querySelector('button.add-form');
+    if (!totalInput || !container || !tmpl || !btn) return;
+
+    btn.addEventListener('click', function () {
+        var idx = parseInt(totalInput.value, 10);
+        var html = tmpl.innerHTML.replace(/__prefix__/g, idx);
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        container.appendChild(wrapper.firstElementChild);
+        totalInput.value = idx + 1;
+    });
+});
+</script>
+{% endblock %}

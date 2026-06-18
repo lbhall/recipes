@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}{{ recipe.name }}{% endblock %}
+{% block content %}
+<h1>{{ recipe.name }}</h1>
+<p class="meta">by {{ recipe.author.username }} · {{ recipe.created_at|date:"M j, Y" }}</p>
+
+{% if recipe.photos.all %}
+    <div class="photo-gallery">
+        {% for photo in recipe.photos.all %}
+            <figure>
+                <img src="{{ photo.image.url }}" alt="{{ photo.caption }}">
+                {% if photo.caption %}<figcaption>{{ photo.caption }}</figcaption>{% endif %}
+            </figure>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if recipe.description %}
+    <p>{{ recipe.description|linebreaks }}</p>
+{% endif %}
+
+<h2>Ingredients</h2>
+{% if recipe.ingredients.all %}
+    <ul>
+        {% for ingredient in recipe.ingredients.all %}
+            <li>{{ ingredient.text }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p class="meta">No ingredients listed.</p>
+{% endif %}
+
+<h2>Steps</h2>
+{% if recipe.steps.all %}
+    <ol>
+        {% for step in recipe.steps.all %}
+            <li>{{ step.instruction|linebreaks }}</li>
+        {% endfor %}
+    </ol>
+{% else %}
+    <p class="meta">No steps listed.</p>
+{% endif %}
+
+{% if user.is_authenticated and user == recipe.author %}
+    <p>
+        <a class="button" href="{% url 'cookbook:recipe_update' recipe.pk %}">Edit</a>
+        <a class="button danger" href="{% url 'cookbook:recipe_delete' recipe.pk %}">Delete</a>
+    </p>
+{% endif %}
+{% endblock %}
