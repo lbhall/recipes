@@ -1,32 +1,58 @@
 {% extends 'base.html' %}
-{% block title %}All recipes{% endblock %}
+{% block title %}{% if category %}{{ category.name }}{% elif query %}Search{% else %}All recipes{% endif %}{% endblock %}
 {% block content %}
-<h1>Recipes</h1>
 
-{% if not recipes %}
-    <p>No recipes yet.{% if user.is_authenticated %} <a href="{% url 'cookbook:recipe_create' %}">Add the first one</a>.{% endif %}</p>
+{% if query %}
+    <h1>Results for &ldquo;{{ query }}&rdquo;</h1>
+    <p class="meta">{{ paginator.count }} recipe{{ paginator.count|pluralize }} found</p>
+{% elif category %}
+    <h1>{{ category.name }}</h1>
+    <p class="meta">{{ paginator.count }} recipe{{ paginator.count|pluralize }}</p>
+{% else %}
+    <h1 style="font-size:2.2rem;margin-bottom:.25rem;">What's cooking?</h1>
+    <p class="meta" style="margin-top:0;font-size:1rem;">Browse every recipe in the kitchen.</p>
 {% endif %}
 
+{% if not recipes %}
+    <p style="margin-top:2rem;">
+        No recipes found{% if query %} for that search{% endif %}.
+        {% if user.is_authenticated %}<a href="{% url 'cookbook:recipe_create' %}">Add one</a>.{% endif %}
+    </p>
+{% endif %}
+
+<div class="card-grid" style="margin-top:1.5rem;">
 {% for recipe in recipes %}
-    <article class="recipe-card">
-        {% with first_photo=recipe.photos.first %}
-            {% if first_photo %}
-                <img src="{{ first_photo.image.url }}" alt="">
-            {% endif %}
-        {% endwith %}
-        <div>
-            <h2 style="margin:0"><a href="{{ recipe.get_absolute_url }}">{{ recipe.name }}</a></h2>
-            <p class="meta">by {{ recipe.author.username }} · {{ recipe.created_at|date:"M j, Y" }}</p>
-            <p>{{ recipe.description|truncatewords:30 }}</p>
-        </div>
+    <article class="card">
+        <a href="{{ recipe.get_absolute_url }}">
+            {% with first_photo=recipe.photos.first %}
+                {% if first_photo %}
+                    <span class="card__media"><img src="{{ first_photo.image.url }}" alt="{{ recipe.name }}"></span>
+                {% else %}
+                    <span class="card__media placeholder">🍽️</span>
+                {% endif %}
+            {% endwith %}
+            <div class="card__body">
+                <h2 class="card__title">{{ recipe.name }}</h2>
+                <div class="card__meta">
+                    {% if recipe.total_minutes %}<span>⏱ {{ recipe.total_minutes }} min</span>{% endif %}
+                    {% if recipe.difficulty %}<span>{{ recipe.get_difficulty_display }}</span>{% endif %}
+                    <span>by {{ recipe.author.username }}</span>
+                </div>
+            </div>
+        </a>
     </article>
 {% endfor %}
+</div>
 
 {% if is_paginated %}
-    <nav class="meta">
-        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">&laquo; Prev</a>{% endif %}
-        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>{% endif %}
+    <nav class="pager">
+        {% if page_obj.has_previous %}
+            <a class="button ghost" href="?{% if query %}q={{ query|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">&laquo; Prev</a>
+        {% endif %}
+        <span class="meta">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+            <a class="button ghost" href="?{% if query %}q={{ query|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">Next &raquo;</a>
+        {% endif %}
     </nav>
 {% endif %}
 {% endblock %}

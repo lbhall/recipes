@@ -3,46 +3,154 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>{% block title %}Recipes{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Recipes{% endblock %} | Homemade</title>
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 880px; margin: 2rem auto; padding: 0 1rem; color: #222; }
-        a { color: #2255aa; text-decoration: none; }
+        :root {
+            --accent: #d0021b;
+            --accent-dark: #a80016;
+            --ink: #1a1a1a;
+            --muted: #6d6d6d;
+            --line: #e3e3e3;
+            --bg: #ffffff;
+            --bg-soft: #f7f5f2;
+            --radius: 10px;
+            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 6px 18px rgba(0,0,0,.05);
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            margin: 0; color: var(--ink); background: var(--bg);
+            line-height: 1.55;
+        }
+        a { color: var(--accent); text-decoration: none; }
         a:hover { text-decoration: underline; }
-        nav { display: flex; gap: 1rem; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: .75rem; margin-bottom: 1.5rem; }
-        nav .spacer { flex: 1; }
-        .messages { list-style: none; padding: 0; }
-        .messages li { padding: .5rem .75rem; border-radius: 4px; margin-bottom: .5rem; background: #eef; }
-        .messages li.error { background: #fee; }
-        .recipe-card { border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; display: flex; gap: 1rem; }
-        .recipe-card img { width: 120px; height: 90px; object-fit: cover; border-radius: 4px; }
-        .photo-gallery { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0; }
-        .photo-gallery figure { margin: 0; }
-        .photo-gallery img { max-width: 240px; max-height: 180px; border-radius: 4px; }
-        .photo-gallery figcaption { font-size: .85rem; color: #666; text-align: center; }
-        form table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
-        form table th, form table td { padding: .25rem .5rem; vertical-align: top; }
-        fieldset { margin-bottom: 1rem; }
-        button, .button { display: inline-block; background: #2255aa; color: white; padding: .5rem 1rem; border: 0; border-radius: 4px; cursor: pointer; }
-        .button.danger { background: #aa2222; }
-        .meta { color: #666; font-size: .9rem; }
+        h1, h2, h3 { font-weight: 800; letter-spacing: -.01em; line-height: 1.15; }
+
+        /* Header */
+        .site-header { border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 20; }
+        .site-header__bar {
+            max-width: 1100px; margin: 0 auto; padding: .9rem 1rem;
+            display: flex; align-items: center; gap: 1.5rem;
+        }
+        .logo { font-size: 1.5rem; font-weight: 900; color: var(--ink); letter-spacing: -.02em; white-space: nowrap; }
+        .logo:hover { text-decoration: none; }
+        .logo span { color: var(--accent); }
+        .search { flex: 1; display: flex; max-width: 520px; }
+        .search input {
+            flex: 1; border: 2px solid var(--ink); border-right: 0;
+            border-radius: 999px 0 0 999px; padding: .55rem 1.1rem; font-size: .95rem; outline: none;
+        }
+        .search button {
+            border: 2px solid var(--ink); background: var(--ink); color: #fff;
+            border-radius: 0 999px 999px 0; padding: 0 1.2rem; font-weight: 700; cursor: pointer;
+        }
+        .search button:hover { background: var(--accent); border-color: var(--accent); }
+        .header-nav { display: flex; align-items: center; gap: 1rem; margin-left: auto; white-space: nowrap; }
+        .header-nav .who { color: var(--muted); font-size: .9rem; }
+        .btn-link { background: none; border: 0; color: var(--accent); padding: 0; cursor: pointer; font: inherit; }
+
+        /* Category strip */
+        .cat-strip { background: var(--bg-soft); border-bottom: 1px solid var(--line); }
+        .cat-strip__inner {
+            max-width: 1100px; margin: 0 auto; padding: .6rem 1rem;
+            display: flex; gap: .5rem; overflow-x: auto; align-items: center;
+        }
+        .chip {
+            display: inline-block; padding: .35rem .85rem; border-radius: 999px;
+            background: #fff; border: 1px solid var(--line); color: var(--ink);
+            font-size: .85rem; font-weight: 600; white-space: nowrap;
+        }
+        .chip:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+        .chip.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+        /* Layout */
+        main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+        .narrow { max-width: 760px; }
+
+        /* Buttons */
+        .button {
+            display: inline-block; background: var(--accent); color: #fff;
+            padding: .6rem 1.15rem; border: 0; border-radius: 999px; cursor: pointer;
+            font-weight: 700; font-size: .95rem;
+        }
+        .button:hover { background: var(--accent-dark); text-decoration: none; }
+        .button.ghost { background: #fff; color: var(--ink); border: 2px solid var(--ink); }
+        .button.ghost:hover { background: var(--ink); color: #fff; }
+        .button.danger { background: #fff; color: var(--accent); border: 2px solid var(--accent); }
+        .button.danger:hover { background: var(--accent); color: #fff; }
+
+        /* Messages */
+        .messages { list-style: none; padding: 0; max-width: 1100px; margin: 1rem auto 0; padding-inline: 1rem; }
+        .messages li { padding: .6rem .9rem; border-radius: var(--radius); margin-bottom: .5rem; background: #eef6ff; border: 1px solid #cfe3fb; }
+        .messages li.error { background: #fde8e8; border-color: #f5c2c2; }
+
+        /* Card grid */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1.5rem; }
+        .card {
+            background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+            overflow: hidden; box-shadow: var(--shadow); transition: transform .12s ease, box-shadow .12s ease;
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,.12), 0 12px 28px rgba(0,0,0,.08); }
+        .card a { color: inherit; }
+        .card a:hover { text-decoration: none; }
+        .card__media { aspect-ratio: 4 / 3; background: var(--bg-soft); display: block; overflow: hidden; }
+        .card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .card__media.placeholder { display: flex; align-items: center; justify-content: center; color: #c9c4bd; font-size: 2.4rem; }
+        .card__body { padding: .9rem 1rem 1.1rem; }
+        .card__title { font-size: 1.05rem; margin: 0 0 .35rem; }
+        .card__meta { color: var(--muted); font-size: .82rem; display: flex; gap: .75rem; flex-wrap: wrap; }
+
+        /* Meta + misc */
+        .meta { color: var(--muted); font-size: .9rem; }
+        .pager { display: flex; gap: 1rem; align-items: center; justify-content: center; margin-top: 2.5rem; }
+
+        /* Footer */
+        .site-footer { border-top: 1px solid var(--line); background: var(--bg-soft); color: var(--muted); }
+        .site-footer__inner { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem; font-size: .85rem; }
+
+        @media (max-width: 640px) {
+            .search { order: 3; flex-basis: 100%; max-width: none; }
+            .site-header__bar { flex-wrap: wrap; }
+        }
     </style>
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-<nav>
-    <a href="{% url 'cookbook:recipe_list' %}"><strong>Recipes</strong></a>
-    <span class="spacer"></span>
-    {% if user.is_authenticated %}
-        <a href="{% url 'cookbook:recipe_create' %}">New recipe</a>
-        <span class="meta">Hi, {{ user.username }}</span>
-        <form method="post" action="{% url 'logout' %}" style="margin:0">
-            {% csrf_token %}
-            <button type="submit" style="background:none;border:0;color:#2255aa;padding:0;cursor:pointer">Logout</button>
+<header class="site-header">
+    <div class="site-header__bar">
+        <a class="logo" href="{% url 'cookbook:recipe_list' %}">Home<span>made</span></a>
+        <form class="search" method="get" action="{% url 'cookbook:recipe_list' %}" role="search">
+            <input type="search" name="q" placeholder="Find a recipe or ingredient…"
+                   value="{{ query|default:'' }}" aria-label="Search recipes">
+            <button type="submit">Search</button>
         </form>
-    {% else %}
-        <a href="{% url 'login' %}">Login</a>
-        <a href="{% url 'register' %}">Register</a>
+        <nav class="header-nav">
+            {% if user.is_authenticated %}
+                <a class="button" href="{% url 'cookbook:recipe_create' %}">+ Add recipe</a>
+                <span class="who">{{ user.username }}</span>
+                <form method="post" action="{% url 'logout' %}" style="margin:0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-link">Log out</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Log in</a>
+                <a class="button" href="{% url 'register' %}">Register</a>
+            {% endif %}
+        </nav>
+    </div>
+    {% if categories %}
+    <div class="cat-strip">
+        <div class="cat-strip__inner">
+            <a class="chip {% if not category %}is-active{% endif %}" href="{% url 'cookbook:recipe_list' %}">All</a>
+            {% for cat in categories %}
+                <a class="chip {% if category and category.pk == cat.pk %}is-active{% endif %}"
+                   href="{{ cat.get_absolute_url }}">{{ cat.name }}</a>
+            {% endfor %}
+        </div>
+    </div>
     {% endif %}
-</nav>
+</header>
 
 {% if messages %}
 <ul class="messages">
@@ -52,6 +160,14 @@
 </ul>
 {% endif %}
 
-{% block content %}{% endblock %}
+<main class="{% block main_class %}{% endblock %}">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div class="site-footer__inner">
+        Homemade — a place for your recipes.
+    </div>
+</footer>
 </body>
 </html>

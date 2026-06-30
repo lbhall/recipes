@@ -1,11 +1,138 @@
 {% extends 'base.html' %}
 {% block title %}{{ recipe.name }}{% endblock %}
-{% block content %}
-<h1>{{ recipe.name }}</h1>
-<p class="meta">by {{ recipe.author.username }} · {{ recipe.created_at|date:"M j, Y" }}</p>
+{% block main_class %}narrow{% endblock %}
 
-{% if recipe.photos.all %}
-    <div class="photo-gallery">
+{% block extra_head %}
+<style>
+    .recipe-head h1 { font-size: 2.4rem; margin: 0 0 .5rem; }
+    .recipe-head .byline { color: var(--muted); font-size: .95rem; }
+    .recipe-cats { margin: .75rem 0; display: flex; gap: .4rem; flex-wrap: wrap; }
+    .hero { margin: 1.5rem 0; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .hero img { width: 100%; display: block; max-height: 460px; object-fit: cover; }
+    .summary { font-size: 1.05rem; }
+
+    .facts {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 1rem; padding: 1.25rem; margin: 1.75rem 0;
+        background: var(--bg-soft); border-radius: var(--radius); border: 1px solid var(--line);
+        text-align: center;
+    }
+    .facts dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; }
+    .facts dd { margin: .25rem 0 0; font-size: 1.05rem; font-weight: 700; }
+
+    .section { margin: 2.5rem 0; }
+    .section h2 { font-size: 1.5rem; border-bottom: 3px solid var(--accent); display: inline-block; padding-bottom: .25rem; }
+
+    .ingredients { list-style: none; padding: 0; }
+    .ingredients li { padding: .5rem 0; border-bottom: 1px solid var(--line); display: flex; gap: .65rem; align-items: baseline; }
+    .ingredients input { transform: translateY(1px); }
+
+    .steps { padding-left: 0; list-style: none; counter-reset: step; }
+    .steps li { position: relative; padding: 0 0 1.25rem 3rem; counter-increment: step; }
+    .steps li::before {
+        content: counter(step); position: absolute; left: 0; top: 0;
+        width: 2rem; height: 2rem; border-radius: 50%; background: var(--accent); color: #fff;
+        display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .95rem;
+    }
+
+    .nutrition { width: 100%; border-collapse: collapse; max-width: 360px; }
+    .nutrition th, .nutrition td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--line); }
+    .nutrition td { text-align: right; font-weight: 700; }
+
+    .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .75rem; }
+    .gallery figure { margin: 0; }
+    .gallery img { width: 100%; height: 130px; object-fit: cover; border-radius: var(--radius); }
+    .gallery figcaption { font-size: .8rem; color: var(--muted); text-align: center; margin-top: .25rem; }
+
+    .owner-actions { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line); display: flex; gap: .75rem; }
+
+    @media print {
+        .site-header, .site-footer, .owner-actions, .printbar { display: none !important; }
+        main { max-width: none; }
+        a { color: #000; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="recipe-head">
+    <h1>{{ recipe.name }}</h1>
+    <p class="byline">by <strong>{{ recipe.author.username }}</strong> · {{ recipe.created_at|date:"F j, Y" }}</p>
+    {% if recipe.categories.all %}
+    <div class="recipe-cats">
+        {% for cat in recipe.categories.all %}
+            <a class="chip" href="{{ cat.get_absolute_url }}">{{ cat.name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<div class="printbar">
+    <button class="button ghost" type="button" onclick="window.print()">🖨 Print</button>
+</div>
+
+{% with hero=recipe.photos.first %}
+    {% if hero %}
+    <div class="hero"><img src="{{ hero.image.url }}" alt="{{ recipe.name }}"></div>
+    {% endif %}
+{% endwith %}
+
+{% if recipe.description %}
+    <p class="summary">{{ recipe.description|linebreaks }}</p>
+{% endif %}
+
+<dl class="facts">
+    {% if recipe.prep_minutes %}<div><dt>Prep</dt><dd>{{ recipe.prep_minutes }} min</dd></div>{% endif %}
+    {% if recipe.cook_minutes %}<div><dt>Cook</dt><dd>{{ recipe.cook_minutes }} min</dd></div>{% endif %}
+    {% if recipe.total_minutes %}<div><dt>Total</dt><dd>{{ recipe.total_minutes }} min</dd></div>{% endif %}
+    {% if recipe.servings %}<div><dt>Servings</dt><dd>{{ recipe.servings }}</dd></div>{% endif %}
+    {% if recipe.difficulty %}<div><dt>Difficulty</dt><dd>{{ recipe.get_difficulty_display }}</dd></div>{% endif %}
+    {% if recipe.cuisine %}<div><dt>Cuisine</dt><dd>{{ recipe.cuisine }}</dd></div>{% endif %}
+</dl>
+
+<section class="section">
+    <h2>Ingredients</h2>
+    {% if recipe.ingredients.all %}
+        <ul class="ingredients">
+            {% for ingredient in recipe.ingredients.all %}
+                <li><input type="checkbox"> <span>{{ ingredient.display }}</span></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="meta">No ingredients listed.</p>
+    {% endif %}
+</section>
+
+<section class="section">
+    <h2>Directions</h2>
+    {% if recipe.steps.all %}
+        <ol class="steps">
+            {% for step in recipe.steps.all %}
+                <li>{{ step.instruction|linebreaks }}</li>
+            {% endfor %}
+        </ol>
+    {% else %}
+        <p class="meta">No steps listed.</p>
+    {% endif %}
+</section>
+
+{% if recipe.has_nutrition %}
+<section class="section">
+    <h2>Nutrition</h2>
+    <p class="meta">Per serving</p>
+    <table class="nutrition">
+        {% if recipe.calories %}<tr><th>Calories</th><td>{{ recipe.calories }}</td></tr>{% endif %}
+        {% if recipe.fat_g %}<tr><th>Fat</th><td>{{ recipe.fat_g }} g</td></tr>{% endif %}
+        {% if recipe.carbs_g %}<tr><th>Carbs</th><td>{{ recipe.carbs_g }} g</td></tr>{% endif %}
+        {% if recipe.protein_g %}<tr><th>Protein</th><td>{{ recipe.protein_g }} g</td></tr>{% endif %}
+    </table>
+</section>
+{% endif %}
+
+{% if recipe.photos.all|length > 1 %}
+<section class="section">
+    <h2>Photos</h2>
+    <div class="gallery">
         {% for photo in recipe.photos.all %}
             <figure>
                 <img src="{{ photo.image.url }}" alt="{{ photo.caption }}">
@@ -13,38 +140,13 @@
             </figure>
         {% endfor %}
     </div>
-{% endif %}
-
-{% if recipe.description %}
-    <p>{{ recipe.description|linebreaks }}</p>
-{% endif %}
-
-<h2>Ingredients</h2>
-{% if recipe.ingredients.all %}
-    <ul>
-        {% for ingredient in recipe.ingredients.all %}
-            <li>{{ ingredient.text }}</li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p class="meta">No ingredients listed.</p>
-{% endif %}
-
-<h2>Steps</h2>
-{% if recipe.steps.all %}
-    <ol>
-        {% for step in recipe.steps.all %}
-            <li>{{ step.instruction|linebreaks }}</li>
-        {% endfor %}
-    </ol>
-{% else %}
-    <p class="meta">No steps listed.</p>
+</section>
 {% endif %}
 
 {% if user.is_authenticated and user == recipe.author %}
-    <p>
-        <a class="button" href="{% url 'cookbook:recipe_update' recipe.pk %}">Edit</a>
+    <div class="owner-actions">
+        <a class="button ghost" href="{% url 'cookbook:recipe_update' recipe.pk %}">Edit</a>
         <a class="button danger" href="{% url 'cookbook:recipe_delete' recipe.pk %}">Delete</a>
-    </p>
+    </div>
 {% endif %}
 {% endblock %}

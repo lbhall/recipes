@@ -1,9 +1,32 @@
 {% extends 'base.html' %}
 {% block title %}{% if object %}Edit{% else %}New{% endif %} recipe{% endblock %}
-{% block content %}
-<h1>{% if object %}Edit{% else %}New{% endif %} recipe</h1>
+{% block main_class %}narrow{% endblock %}
 
-<form method="post" enctype="multipart/form-data">
+{% block extra_head %}
+<style>
+    .recipe-form fieldset { border: 1px solid var(--line); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; }
+    .recipe-form legend { font-weight: 800; padding: 0 .5rem; font-size: 1.1rem; }
+    .recipe-form label { font-weight: 600; font-size: .9rem; }
+    .recipe-form input[type=text], .recipe-form input[type=number], .recipe-form textarea,
+    .recipe-form select, .recipe-form input[type=file] {
+        width: 100%; padding: .5rem .65rem; border: 1px solid var(--line); border-radius: 6px;
+        font: inherit; margin-top: .2rem;
+    }
+    .recipe-form textarea { min-height: 90px; }
+    .recipe-form p { margin: .35rem 0 .9rem; }
+    .recipe-form ul { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; }
+    .recipe-form ul label { font-weight: 500; }
+    .formset-row { border: 1px dashed var(--line); border-radius: 8px; padding: .75rem 1rem; margin-bottom: .75rem; background: var(--bg-soft); }
+    .add-form { margin-top: .5rem; background: #fff; color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: .4rem 1rem; font-weight: 700; cursor: pointer; }
+    .add-form:hover { background: var(--ink); color: #fff; }
+    .form-actions { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>{% if object %}Edit recipe{% else %}Add a recipe{% endif %}</h1>
+
+<form method="post" enctype="multipart/form-data" class="recipe-form">
     {% csrf_token %}
 
     <fieldset>
@@ -13,6 +36,7 @@
 
     <fieldset class="formset" data-prefix="ingredients">
         <legend>Ingredients</legend>
+        <p class="meta">Quantity + unit + item, e.g. <em>2</em> / <em>cups</em> / <em>flour</em>.</p>
         {{ ingredient_formset.management_form }}
         <div class="formset-forms">
             {% for fs_form in ingredient_formset %}
@@ -29,7 +53,7 @@
     </fieldset>
 
     <fieldset class="formset" data-prefix="steps">
-        <legend>Steps</legend>
+        <legend>Directions</legend>
         {{ step_formset.management_form }}
         <div class="formset-forms">
             {% for fs_form in step_formset %}
@@ -62,8 +86,10 @@
         <button type="button" class="add-form">Add another photo</button>
     </fieldset>
 
-    <button type="submit">Save recipe</button>
-    <a href="{% url 'cookbook:recipe_list' %}">Cancel</a>
+    <div class="form-actions">
+        <button type="submit" class="button">Save recipe</button>
+        <a href="{% url 'cookbook:recipe_list' %}">Cancel</a>
+    </div>
 </form>
 
 <script>

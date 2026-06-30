@@ -9,27 +9,55 @@ from django.views.generic import (
     UpdateView,
 )
 
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
+
 from .forms import (
     IngredientFormSet,
     PhotoFormSet,
     RecipeForm,
     StepFormSet,
 )
-from .models import Recipe
+from .models import Category, Recipe
 
 
 class RecipeListView(ListView):
     model = Recipe
     template_name = 'cookbook/recipe_list.html'
     context_object_name = 'recipes'
-    paginate_by = 20
+    paginate_by = 12
+
+    def get_category(self):
+        slug = self.kwargs.get('slug')
+        if slug:
+            return get_object_or_404(Category, slug=slug)
+        return None
 
     def get_queryset(self):
-        return (
+        qs = (
             Recipe.objects
             .select_related('author')
-            .prefetch_related('photos')
+            .prefetch_related('photos', 'categories')
         )
+        category = self.get_category()
+        if category:
+            qs = qs.filter(categories=category)
+        query = self.request.GET.get('q', '').strip()
+        if query:
+            qs = qs.filter(
+                Q(name__icontains=query)
+                | Q(description__icontains=query)
+                | Q(cuisine__icontains=query)
+                | Q(ingredients__text__icontains=query)
+            ).distinct()
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['query'] = self.request.GET.get('q', '').strip()
+        ctx['category'] = self.get_category()
+        ctx['categories'] = Category.objects.all()
+        return ctx
 
 
 class RecipeDetailView(DetailView):
