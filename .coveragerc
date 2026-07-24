@@ -1,0 +1,11 @@
+[run]
+source = accounts,cookbook
+omit =
+    */migrations/*
+    */tests.py
+    */__init__.py
+    */apps.py
+    manage.py
+
+[report]
+show_missing = True
